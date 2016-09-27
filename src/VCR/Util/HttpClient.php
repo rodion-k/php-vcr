@@ -29,9 +29,26 @@ class HttpClient
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FAILONERROR, false);
-        curl_setopt($ch, CURLOPT_HEADER, true);
+        
+        $status = '';
+        $headers = [];
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $data)
+            use ($request, &$status, &$headers) {
+            $str = trim($data);
+            if ('' !== $str) {
+                if (strpos(strtolower($str), 'http/') === 0) {
+                    $status = $data;
+                } else {
+                    $headers[] = $data;
+                }
+            }
 
-        list($status, $headers, $body) = HttpUtil::parseResponse(curl_exec($ch));
+            return isset($request->getCurlOptions()[CURLOPT_HEADERFUNCTION])
+                ? $request->getCurlOptions()[CURLOPT_HEADERFUNCTION]($ch, $data)
+                : strlen($data);
+        });
+
+        $body = curl_exec($ch);
 
         return new Response(
             HttpUtil::parseStatus($status),
