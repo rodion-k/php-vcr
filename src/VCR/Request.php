@@ -165,7 +165,18 @@ class Request
      */
     public function getHeader($key)
     {
-        return $this->headers[$key];
+        $headerValues = array_reduce($this->headers, function($values, $header) use ($key) {
+            preg_match('^([^:])*:(.*)$', $header, $matches);
+            list(, $name, $value) = $matches;
+            
+            if ($name === $key) {
+                $values[] = $value;
+            }
+            
+            return $values;
+        }, '');
+        
+        return implode(', ', $headerValues);
     }
 
     /**
@@ -301,7 +312,10 @@ class Request
      */
     public function setHeader($key, $value)
     {
-        $this->headers[$key] = $value;
+        $header = "$key: $value";
+        if (array_search($header, $this->headers) === false) {
+            $this->headers[] = "$key: $value";
+        }
     }
 
     /**
