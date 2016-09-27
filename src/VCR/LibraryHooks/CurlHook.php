@@ -329,4 +329,12 @@ class CurlHook implements LibraryHook
             }
         }
     }
+    
+    public static function curlReset($curlHandle)
+    {
+        unset(self::$requests[(int) $curlHandle]);
+        
+        self::$requests[(int) $curlHandle] = new Request('GET', null);
+        self::$curlOptions[(int) $curlHandle] = array();
+    }
 }
