@@ -165,16 +165,17 @@ class Request
      */
     public function getHeader($key)
     {
+        $key = strtolower($key);
         $headerValues = array_reduce($this->headers, function($values, $header) use ($key) {
-            preg_match('^([^:])*:(.*)$', $header, $matches);
+            preg_match('~^([^:]*):(.*)$~', $header, $matches);
             list(, $name, $value) = $matches;
             
-            if ($name === $key) {
-                $values[] = $value;
+            if (strtolower($name) === $key) {
+                $values[] = trim($value);
             }
             
             return $values;
-        }, '');
+        }, []);
         
         return implode(', ', $headerValues);
     }

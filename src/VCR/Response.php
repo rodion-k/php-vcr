@@ -56,6 +56,7 @@ class Response
         // Base64 encode when binary
         if (
             strpos($this->getContentType(), 'application/x-gzip') !== false
+            || strpos($this->getContentType(), '/mpeg') !== false
             || $this->getHeader('Content-Transfer-Encoding') == 'binary'
         ) {
             $body = base64_encode($body);
@@ -145,11 +146,19 @@ class Response
 
     public function getHeader($key)
     {
-        if (!isset($this->headers[$key])) {
-            return null;
-        }
-
-        return $this->headers[$key];
+        $key = strtolower($key);
+        $headerValues = array_reduce($this->headers, function($values, $header) use ($key) {
+            preg_match('~^([^:]*):(.*)$~', $header, $matches);
+            list(, $name, $value) = $matches;
+            
+            if (strtolower($name) === $key) {
+                $values[] = trim($value);
+            }
+            
+            return $values;
+        }, []);
+        
+        return implode(', ', $headerValues);
     }
 
     /**
